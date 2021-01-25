@@ -1,0 +1,126 @@
+import pandas as pd
+import numpy as np
+import random
+import string
+import time
+import re
+
+
+
+df=pd.read_excel('E:/pycharm_workspace/table_format.xlsx')
+
+name=df['字段名称'].to_list()
+leixing=df['字段类型'].to_list()
+changdu=df['字段长度'].to_list()
+
+name_ex=['王生安','潘恩依','刘昼星','易江维','张淮森','蔡容富','何刚名','李富','张三','周杰','毛毛']
+
+data_num=input("造数的条数：")
+
+#随机产生字符串
+#字符串中包含字母，默认长度为16
+def generate_random_str(randomlength=16,str_type=1):
+    random_str=''
+    if str_type==1:#字符串中包含字母和数字
+        str_list=[random.choice(string.digits+string.ascii_letters) for i in range(randomlength)]
+        random_str=''.join(str_list)
+    if str_type==2:#字符串中只含有数字
+        str_list=[random.choice(string.digits) for i in range(randomlength)]
+        random_str=''.join(str_list)
+    if str_type==3:#字符串中只含有字母
+        str_list=[random.choice(string.ascii_letters) for i in range(randomlength)]
+        random_str=''.join(str_list)
+    return random_str
+
+#随机产生decimal类型数据
+def generate_random_decimal(min_value=10,max_value=12,weishu=2):
+    random_decimal=random.uniform(min_value,max_value)
+    return round(random_decimal,weishu)
+
+#随机产生bigint类型数据
+def generate_random_bigint(min_value=100, max_value=300):
+    return random.randint(min_value, max_value)
+
+#随机产生timestamp类型数据
+def generate_random_timestamp(start_time='2020-01-25 00:00:00', end_time='2020-01-30 00:00:00'):
+    # start_time="2020-01-25 00:00:00"
+    # end_time="2020-01-25 23:59:59"
+    start_time_list = re.split("[^0-9]+", start_time) #以非数值型数据进行分割
+    start_time_list.extend(['0', '0', '0'])
+    end_time_list = re.split("[^0-9]+", end_time) 
+    end_time_list.extend(['0', '0', '0'])
+    start_time_tuple = tuple([int(x) for x in start_time_list]) #转为元组类型
+    end_time_tuple = tuple([int(x) for x in end_time_list])
+    start = time.mktime(start_time_tuple)
+    end = time.mktime(end_time_tuple)
+    t = random.randint(start, end)
+    date_touple = time.localtime(t)
+    date = time.strftime("%Y-%m-%d %H:%M:%S", date_touple)
+
+    return date
+
+#随机产生一定范围内的随机数据
+def generate_random_date(start_time='2020-01-25 00:00:00', end_time='2020-01-30 00:00:00'):
+    # start_time="2020-01-25 00:00:00"
+    # end_time="2020-01-25 23:59:59"
+    start_time_list = re.split("[^0-9]+", start_time)
+    start_time_list.extend(['0', '0', '0'])
+    end_time_list = re.split("[^0-9]+", end_time)
+    end_time_list.extend(['0', '0', '0'])
+    start_time_tuple = tuple([int(x) for x in start_time_list])
+    end_time_tuple = tuple([int(x) for x in end_time_list])
+    start = time.mktime(start_time_tuple)
+    end = time.mktime(end_time_tuple)
+    t = random.randint(start, end)
+    date_touple = time.localtime(t)
+    date = time.strftime("%Y-%m-%d", date_touple)
+
+    return date
+
+
+l=len(name)
+print(l)
+data_num=10
+data_col=[]
+for i in list(range(l)):
+    print('start produce %s column data'%name[i])
+    print('data type is %s'%leixing[i])
+    tmp_data_col=[]
+    if leixing[i]=='string':
+        if_name=input("该列是否为姓名列：yes or no:")
+        if if_name=='yes':
+            for j in list(range(data_num)):
+                tmp_name=name_ex[j]
+                tmp_data_col.append(tmp_name)
+        else:
+            str_type=input("输入字符串的类型：1 字符串中包含数字和字母，2 字符串中只含有数字，3 字符串中只含有字母")
+            str_len=input("输入字符串的长度：")
+            for j in list(range(data_num)):
+                tmp_data_col.append(generate_random_str(randomlength=int(str_len),str_type=int(str_type)))
+    if leixing[i]=='bigint':
+        bigint_min=input("输入整型数值的最小值：")
+        bigint_max=input("输入整型数值的最大值：")
+        for j in list(range(data_num)):
+            tmp_data_col.append(generate_random_bigint(min_value=int(bigint_min),max_value=int(bigint_max)))
+    if leixing[i]=='decimal':
+        decimal_min=input("输入整数部分的最小值：")
+        decimal_max=input("输入整数部分的最大值：")
+        decimal_weishu=input("输入小数部分的位数：")
+        for j in list(range(data_num)):
+            tmp_data_col.append(generate_random_decimal(min_value=int(decimal_min),max_value=int(decimal_max),weishu=int(decimal_weishu)))
+    if leixing[i]=='timestamp':
+        for j in list(range(data_num)):
+            tmp_data_col.append(generate_random_timestamp())
+    if leixing[i]=='date':
+        for j in list(range(data_num)):
+            tmp_data_col.append(generate_random_date())
+    data_col.append(tmp_data_col)
+
+print('造数成功')
+b=np.array(data_col)
+data_t=b.T   #转置
+
+print('转置成功')
+data_result=pd.DataFrame(data_t, columns=name)
+print("转为dataframe成功")
+data_result.to_csv('E:/pycharm_workspace/table_format_result.csv',index=False)
